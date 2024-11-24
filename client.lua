@@ -1,4 +1,6 @@
 local QBCore = exports['qb-core']:GetCoreObject()
+local ped = cache.ped 
+
 
 lib.registerContext({
     id = 'admin_troll_menu',
@@ -78,76 +80,69 @@ local function notifyPlayer(message, type)
 end
 
 RegisterNetEvent('tropic-trollmenu:clientExplodePlayer', function()
-    local pos = GetEntityCoords(PlayerPedId())
+    local pos = GetEntityCoords(ped)
     AddExplosion(pos.x, pos.y, pos.z, 2, 5.0, true, false, 1.0)
 end)
 
 RegisterNetEvent('tropic-trollmenu:clientFlipVehicle', function()
-    local playerPed = PlayerPedId()
-    local vehicle = GetVehiclePedIsIn(playerPed, false)
+    local vehicle = GetVehiclePedIsIn(ped, false)
     if vehicle and vehicle ~= 0 then
         SetEntityRotation(vehicle, 180.0, 0.0, GetEntityHeading(vehicle), 1, true)
-        notifyPlayer('Did i just hit a rock?', 'inform')
+        notifyPlayer('Did I just hit a rock?', 'inform')
     else
         notifyPlayer('Player is not in a vehicle!', 'error')
     end
 end)
 
 RegisterNetEvent('tropic-trollmenu:clientSpawnClownArmy', function()
-    local playerPed = PlayerPedId()
-    local coords = GetEntityCoords(playerPed)
+    local coords = GetEntityCoords(ped)
+    lib.requestModel(`s_m_y_clown_01`) 
+
     for i = 1, 5 do
-        local model = GetHashKey("s_m_y_clown_01")
-        RequestModel(model)
-        while not HasModelLoaded(model) do Wait(100) end
-        local clown = CreatePed(4, model, coords + vector3(math.random(-5, 5), math.random(-5, 5), 0), 0.0, true, false)
+        local clown = CreatePed(4, `s_m_y_clown_01`, coords + vector3(math.random(-5, 5), math.random(-5, 5), 0), 0.0, true, false)
         TaskStartScenarioInPlace(clown, "WORLD_HUMAN_MUSICIAN", 0, true)
 
         SetTimeout(5000, function()
             if DoesEntityExist(clown) then DeleteEntity(clown) end
         end)
     end
-    notifyPlayer('What the hell am i geeked?', 'inform')
+    notifyPlayer('What the hell am I geeked?', 'inform')
 end)
 
 RegisterNetEvent('tropic-trollmenu:clientAttackPlayer', function()
-    local playerPed = PlayerPedId()
-    local coords = GetEntityCoords(playerPed)
+    local coords = GetEntityCoords(ped)
     local attackers = {}
 
-    local model = GetHashKey("g_m_y_ballaeast_01")
-    RequestModel(model)
-    while not HasModelLoaded(model) do Wait(100) end
+    lib.requestModel(`g_m_y_ballaeast_01`)
 
     for i = 1, 4 do
         local offset = vector3(math.random(-5, 5), math.random(-5, 5), 0)
-        local attacker = CreatePed(4, model, coords + offset, 0.0, true, false)
+        local attacker = CreatePed(4, `g_m_y_ballaeast_01`, coords + offset, 0.0, true, false)
         GiveWeaponToPed(attacker, GetHashKey("weapon_bat"), 1, false, true)
-        TaskCombatPed(attacker, playerPed, 0, 16)
+        TaskCombatPed(attacker, ped, 0, 16)
         attackers[#attackers + 1] = attacker
     end
 
-    notifyPlayer('What the hell did i do?', 'inform')
+    notifyPlayer('What the hell did I do?', 'inform')
 
     SetTimeout(30000, function()
-        for _, ped in ipairs(attackers) do
-            if DoesEntityExist(ped) then DeleteEntity(ped) end
+        for _, entity in ipairs(attackers) do
+            if DoesEntityExist(entity) then DeleteEntity(entity) end
         end
     end)
 end)
 
 RegisterNetEvent('tropic-trollmenu:clientSpinPlayer', function()
-    notifyPlayer('Did i just enter a fucking whirlpool?', 'inform')
-    local playerPed = PlayerPedId()
+    notifyPlayer('Did I just enter a whirlpool?', 'inform')
     local startTime = GetGameTimer()
 
     CreateThread(function()
         while GetGameTimer() - startTime < 5000 do
-            ApplyForceToEntity(playerPed, 1, 0.0, 0.0, 5.0, 0.0, 0.0, 0.0, true, true, true, false, true, true)
-            local rot = GetEntityRotation(playerPed)
-            SetEntityRotation(playerPed, rot.x + 5.0, rot.y + 5.0, rot.z + 10.0, 2, true)
+            ApplyForceToEntity(ped, 1, 0.0, 0.0, 5.0, 0.0, 0.0, 0.0, true, true, true, false, true, true)
+            local rot = GetEntityRotation(ped)
+            SetEntityRotation(ped, rot.x + 5.0, rot.y + 5.0, rot.z + 10.0, 2, true)
             Wait(50)
         end
-        ApplyForceToEntity(playerPed, 1, 0.0, 0.0, -50.0, 0.0, 0.0, 0.0, true, true, true, false, true, true)
+        ApplyForceToEntity(ped, 1, 0.0, 0.0, -50.0, 0.0, 0.0, 0.0, true, true, true, false, true, true)
     end)
 end)
