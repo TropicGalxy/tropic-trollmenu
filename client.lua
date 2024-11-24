@@ -30,7 +30,7 @@ lib.registerContext({
         },
         {
             title = 'Attack Player',
-            description = 'Spawns attackers with baseball bats to attack the player senselessly',
+            description = 'Spawns attackers to attack the player',
             icon = 'user-ninja',
             onSelect = function()
                 getTargetPlayerId('tropic-trollmenu:attackPlayer')
@@ -38,31 +38,18 @@ lib.registerContext({
         },
         {
             title = 'Spin Player',
-            description = 'Makes the target player spin like an idiot',
+            description = 'Makes the target player spin',
             icon = 'arrows-spin',
             onSelect = function()
                 getTargetPlayerId('tropic-trollmenu:spinPlayer')
             end
         }
-     }
+    }
 })
-
-RegisterCommand("opentrollmenu", function()
-    TriggerServerEvent('tropic-trollmenu:openMenu')
-end, false)
-
-RegisterNetEvent('tropic-trollmenu:showMenu')
-AddEventHandler('tropic-trollmenu:showMenu', function()
-    lib.showContext('admin_troll_menu')
-end)
 
 function getTargetPlayerId(event)
     local input = lib.inputDialog("Enter Target Player ID", {
-        {
-            type = "number",
-            label = "Player ID",
-            required = true
-        }
+        { type = "number", label = "Player ID", required = true }
     })
 
     if input then
@@ -70,130 +57,97 @@ function getTargetPlayerId(event)
         if targetId then
             TriggerServerEvent(event, targetId)
         else
-            lib.notify({
-                description = 'Invalid player ID!',
-                type = 'error'
-            })
+            lib.notify({ description = 'Invalid player ID!', type = 'error' })
         end
     end
 end
 
-RegisterNetEvent('tropic-trollmenu:clientExplodePlayer')
-AddEventHandler('tropic-trollmenu:clientExplodePlayer', function()
-    local playerPed = PlayerPedId()
-    local pos = GetEntityCoords(playerPed)
+RegisterCommand("opentrollmenu", function()
+    TriggerServerEvent('tropic-trollmenu:openMenu')
+end, false)
+
+RegisterNetEvent('tropic-trollmenu:showMenu', function()
+    lib.showContext('admin_troll_menu')
+end)
+
+local function notifyPlayer(message, type)
+    lib.notify({
+        description = message,
+        type = type
+    })
+end
+
+RegisterNetEvent('tropic-trollmenu:clientExplodePlayer', function()
+    local pos = GetEntityCoords(PlayerPedId())
     AddExplosion(pos.x, pos.y, pos.z, 2, 5.0, true, false, 1.0)
 end)
 
-RegisterNetEvent('tropic-trollmenu:clientFlipVehicle')
-AddEventHandler('tropic-trollmenu:clientFlipVehicle', function()
+RegisterNetEvent('tropic-trollmenu:clientFlipVehicle', function()
     local playerPed = PlayerPedId()
     local vehicle = GetVehiclePedIsIn(playerPed, false)
     if vehicle and vehicle ~= 0 then
         SetEntityRotation(vehicle, 180.0, 0.0, GetEntityHeading(vehicle), 1, true)
-        lib.notify({
-            description = 'Did i just hit a rock?',
-            type = 'inform'
-        })
+        notifyPlayer('Did i just hit a rock?', 'inform')
     else
-        lib.notify({
-            description = 'That player is not in a vehicle!',
-            type = 'error'
-        })
+        notifyPlayer('Player is not in a vehicle!', 'error')
     end
 end)
 
-RegisterNetEvent('tropic-trollmenu:clientSpawnClownArmy')
-AddEventHandler('tropic-trollmenu:clientSpawnClownArmy', function()
+RegisterNetEvent('tropic-trollmenu:clientSpawnClownArmy', function()
     local playerPed = PlayerPedId()
-    local playerCoords = GetEntityCoords(playerPed)
-
+    local coords = GetEntityCoords(playerPed)
     for i = 1, 5 do
         local model = GetHashKey("s_m_y_clown_01")
         RequestModel(model)
-        while not HasModelLoaded(model) do
-            Wait(100)
-        end
-
-        local offset = vector3(math.random(-5, 5), math.random(-5, 5), 0)
-        local clown = CreatePed(4, model, playerCoords + offset, 0.0, true, false)
+        while not HasModelLoaded(model) do Wait(100) end
+        local clown = CreatePed(4, model, coords + vector3(math.random(-5, 5), math.random(-5, 5), 0), 0.0, true, false)
         TaskStartScenarioInPlace(clown, "WORLD_HUMAN_MUSICIAN", 0, true)
-        
+
         SetTimeout(5000, function()
-            if DoesEntityExist(clown) then
-                DeleteEntity(clown)
-            end
+            if DoesEntityExist(clown) then DeleteEntity(clown) end
         end)
     end
-
-    lib.notify({
-        description = 'What the hell am I geeked?',
-        type = 'inform'
-    })
+    notifyPlayer('What the hell am i geeked?', 'inform')
 end)
 
-RegisterNetEvent('tropic-trollmenu:clientAttackPlayer')
-AddEventHandler('tropic-trollmenu:clientAttackPlayer', function()
+RegisterNetEvent('tropic-trollmenu:clientAttackPlayer', function()
     local playerPed = PlayerPedId()
-    local playerCoords = GetEntityCoords(playerPed)
+    local coords = GetEntityCoords(playerPed)
     local attackers = {}
 
-    local model = GetHashKey("g_m_y_ballaeast_01") 
+    local model = GetHashKey("g_m_y_ballaeast_01")
     RequestModel(model)
-    while not HasModelLoaded(model) do
-        Wait(100)
-    end
+    while not HasModelLoaded(model) do Wait(100) end
 
     for i = 1, 4 do
         local offset = vector3(math.random(-5, 5), math.random(-5, 5), 0)
-        local attacker = CreatePed(4, model, playerCoords + offset, 0.0, true, false)
+        local attacker = CreatePed(4, model, coords + offset, 0.0, true, false)
         GiveWeaponToPed(attacker, GetHashKey("weapon_bat"), 1, false, true)
         TaskCombatPed(attacker, playerPed, 0, 16)
-        SetPedRelationshipGroupHash(attacker, GetHashKey("HATES_PLAYER"))
         attackers[#attackers + 1] = attacker
     end
 
-    lib.notify({
-        description = 'What did i do to you guys?',
-        type = 'warning'
-    })
+    notifyPlayer('What the hell did i do?', 'inform')
 
     SetTimeout(30000, function()
         for _, ped in ipairs(attackers) do
-            if DoesEntityExist(ped) then
-                DeleteEntity(ped)
-            end
+            if DoesEntityExist(ped) then DeleteEntity(ped) end
         end
     end)
 end)
 
-RegisterNetEvent('tropic-trollmenu:clientSpinPlayer')
-AddEventHandler('tropic-trollmenu:clientSpinPlayer', function()
+RegisterNetEvent('tropic-trollmenu:clientSpinPlayer', function()
+    notifyPlayer('Did i just enter a fucking whirlpool?', 'inform')
     local playerPed = PlayerPedId()
-
-      lib.notify({
-            description = "Am i in a fucking whirlpool?",
-            type = 'inform'
-        })  
+    local startTime = GetGameTimer()
 
     CreateThread(function()
-        local startTime = GetGameTimer()
-        local isGravityDisabled = true
-
-        while isGravityDisabled and GetGameTimer() - startTime < 5000 do
-
+        while GetGameTimer() - startTime < 5000 do
             ApplyForceToEntity(playerPed, 1, 0.0, 0.0, 5.0, 0.0, 0.0, 0.0, true, true, true, false, true, true)
-            
             local rot = GetEntityRotation(playerPed)
             SetEntityRotation(playerPed, rot.x + 5.0, rot.y + 5.0, rot.z + 10.0, 2, true)
-
             Wait(50)
         end
-
-
         ApplyForceToEntity(playerPed, 1, 0.0, 0.0, -50.0, 0.0, 0.0, 0.0, true, true, true, false, true, true)
-
-
-        isGravityDisabled = false
     end)
 end)
