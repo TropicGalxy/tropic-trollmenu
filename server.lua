@@ -1,9 +1,12 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
-RegisterNetEvent('tropic-trollmenu:openMenu')
-AddEventHandler('tropic-trollmenu:openMenu', function()
+local function isAdmin(src)
+    return IsPlayerAceAllowed(src, "admin")
+end
+
+RegisterNetEvent('tropic-trollmenu:openMenu', function()
     local src = source
-    if IsPlayerAceAllowed(src, "admin") then
+    if isAdmin(src) then
         TriggerClientEvent('tropic-trollmenu:showMenu', src)
     else
         TriggerClientEvent('ox_lib:notify', src, {
@@ -13,28 +16,32 @@ AddEventHandler('tropic-trollmenu:openMenu', function()
     end
 end)
 
+local function handleAction(eventName, targetId, action)
+    local src = source
+    if not isAdmin(src) then
+        print(string.format("Unauthorized attempt: Player [%s] tried to %s", GetPlayerName(src), action))
+        return
+    end
 
-RegisterNetEvent('tropic-trollmenu:explodePlayer')
-AddEventHandler('tropic-trollmenu:explodePlayer', function(targetId)
-    TriggerClientEvent('tropic-trollmenu:clientExplodePlayer', targetId)
+    TriggerClientEvent(eventName, targetId)
+end
+
+RegisterNetEvent('tropic-trollmenu:explodePlayer', function(targetId)
+    handleAction('tropic-trollmenu:clientExplodePlayer', targetId, "explode a player")
 end)
 
-RegisterNetEvent('tropic-trollmenu:flipVehicle')
-AddEventHandler('tropic-trollmenu:flipVehicle', function(targetId)
-    TriggerClientEvent('tropic-trollmenu:clientFlipVehicle', targetId)
+RegisterNetEvent('tropic-trollmenu:flipVehicle', function(targetId)
+    handleAction('tropic-trollmenu:clientFlipVehicle', targetId, "flip a vehicle")
 end)
 
-RegisterNetEvent('tropic-trollmenu:spawnClownArmy')
-AddEventHandler('tropic-trollmenu:spawnClownArmy', function(targetId)
-    TriggerClientEvent('tropic-trollmenu:clientSpawnClownArmy', targetId)
+RegisterNetEvent('tropic-trollmenu:spawnClownArmy', function(targetId)
+    handleAction('tropic-trollmenu:clientSpawnClownArmy', targetId, "spawn a clown army")
 end)
 
-RegisterNetEvent('tropic-trollmenu:attackPlayer')
-AddEventHandler('tropic-trollmenu:attackPlayer', function(targetId)
-    TriggerClientEvent('tropic-trollmenu:clientAttackPlayer', targetId)
+RegisterNetEvent('tropic-trollmenu:attackPlayer', function(targetId)
+    handleAction('tropic-trollmenu:clientAttackPlayer', targetId, "attack a player")
 end)
 
-RegisterNetEvent('tropic-trollmenu:spinPlayer')
-AddEventHandler('tropic-trollmenu:spinPlayer', function(targetId)
-    TriggerClientEvent('tropic-trollmenu:clientSpinPlayer', targetId)
+RegisterNetEvent('tropic-trollmenu:spinPlayer', function(targetId)
+    handleAction('tropic-trollmenu:clientSpinPlayer', targetId, "spin a player")
 end)
